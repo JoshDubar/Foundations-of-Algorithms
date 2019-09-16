@@ -40,13 +40,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define DEBUG 1
-#if DEBUG
-#define DUMP_DBL(x) printf("line %d: %s = %.5f\n", __LINE__, #x, x)
-#else
-#define DUMP_DBL(x)
-#endif
-
 /* *************************************************** */
 /*                     Constants                       */
 #define DEFAULT_OFFSET 4
@@ -63,34 +56,43 @@
 int count = 0;
 /* *************************************************** */
 /*                  function prototypes                */
-void remove_spaces(char *line);
+void remove_spaces(char *line, int offset, int width);
 int check_commands(char *line);
+void print_spaces(int nn);
+void process_break(char *line);
+void process_paragraph(char *line);
+void print_spaces(int nn);
+int nn(char *line);
 /* *************************************************** */
 
 int main(int argc, char *argv[]) {
     char line[MAX];
-    int previous=0;
+    int previous=0, margin=DEFAULT_OFFSET, width=MAXLINE;
     print_spaces(DEFAULT_OFFSET);
     while (fgets(line, sizeof line, stdin)) {
         if (line[0] == FULLSTOP && !previous) {
-            check_commands(line);
+            if (line[1] == LEFT) {
+                margin = check_commands(line);
+            } else if (line[1] == WIDTH) {
+                width = check_commands(line);
+            }
             previous = 1; 
-        } else if (line[0] != FULLSTOP) {
-            remove_spaces(line);     
+        } else if (line[0] != FULLSTOP && !previous) {
+            remove_spaces(line, margin, width);     
         }
     }
     return 0;
 }
 
-void remove_spaces(char *line) {
+void remove_spaces(char *line, int offset, int width) {
     char *token;
     const char s[MAXDELIM] = " \r\n\t";
     token = strtok(line, s);
     while (token != NULL) {
         count += strlen(token) + 1;
-        if (count-1 > MAXLINE) {
+        if (count-1 > width) {
             printf("\n");
-            print_spaces(DEFAULT_OFFSET);
+            print_spaces(offset);
             count = strlen(token)+1;
         } 
         printf("%s ", token);
@@ -101,12 +103,19 @@ void remove_spaces(char *line) {
 int check_commands(char *line) {
     if (line[1] == BREAK) {
         process_break(line);
-    } else if (line[1] = PARAGRAPH) {
+        return 0;
+    } else if (line[1] == PARAGRAPH) {
         process_paragraph(line);
+        return 0;
     } else if (line[1] == LEFT) {
-        process_left(line);
+        process_paragraph(line);
+        int i =  nn(line);
+        return i;
     } else if (line[1] == WIDTH) {
-        process_width(line);
+        process_paragraph(line);
+        return nn(line);
+        int i =  nn(line);
+        return i;
     }
 }
 
@@ -118,18 +127,19 @@ void process_paragraph(char *line) {
     printf("\n\n");
 }
 
-void process_left(char *line) {
-    printf("\n");
-    
-}
-
-void process_width(char *line) {
-
-}
-
 void print_spaces(int nn) {
     int i;
     for (i=0;i<nn;i++) {
         printf(" ");
     }
+}
+
+int nn(char *line) {
+    char char1[2], char2[1];
+    strcpy(char1, line[4]);
+    strcpy(char2, line[5]);
+    strcat(char1, char2);
+    int converted;
+    converted = atoi(char1);
+    return converted;
 }
