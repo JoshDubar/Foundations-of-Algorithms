@@ -119,7 +119,8 @@ void process_paragraph(char *line) {
 }
 
 void process_left(char *line) {
-    printf("\n")
+    printf("\n");
+    
 }
 
 void process_width(char *line) {
