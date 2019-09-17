@@ -59,8 +59,8 @@ int count = 0;
 void remove_spaces(char *line, int offset, int width);
 int check_commands(char *line);
 void print_spaces(int nn);
-void process_break(char *line);
-void process_paragraph(char *line);
+void process_break();
+void process_paragraph();
 void print_spaces(int nn);
 int nn(char *line);
 /* *************************************************** */
@@ -70,15 +70,21 @@ int main(int argc, char *argv[]) {
     int previous=0, margin=DEFAULT_OFFSET, width=MAXLINE;
     print_spaces(DEFAULT_OFFSET);
     while (fgets(line, sizeof line, stdin)) {
-        if (line[0] == FULLSTOP && !previous) {
+        if (line[0] == FULLSTOP && !previous) {            
             if (line[1] == LEFT) {
                 margin = check_commands(line);
+                printf("\n%d\n", margin);
             } else if (line[1] == WIDTH) {
                 width = check_commands(line);
+            } else if (line[1] == BREAK || line[1] == PARAGRAPH) {
+                check_commands(line);
             }
+            print_spaces(margin);
             previous = 1; 
-        } else if (line[0] != FULLSTOP && !previous) {
-            remove_spaces(line, margin, width);     
+            count = 0;
+        } else if (line[0] != FULLSTOP) {
+            remove_spaces(line, margin, width);  
+            previous = 0;   
         }
     }
     return 0;
@@ -102,28 +108,28 @@ void remove_spaces(char *line, int offset, int width) {
 
 int check_commands(char *line) {
     if (line[1] == BREAK) {
-        process_break(line);
+        process_break();
         return 0;
     } else if (line[1] == PARAGRAPH) {
-        process_paragraph(line);
+        process_paragraph();
         return 0;
     } else if (line[1] == LEFT) {
-        process_paragraph(line);
+        process_paragraph();
         int i =  nn(line);
         return i;
     } else if (line[1] == WIDTH) {
-        process_paragraph(line);
-        return nn(line);
-        int i =  nn(line);
+        process_paragraph();
+        int i = nn(line);
         return i;
     }
+    return 0;
 }
 
-void process_break(char *line) {
+void process_break() {
     printf("\n");
 }
 
-void process_paragraph(char *line) {
+void process_paragraph() {
     printf("\n\n");
 }
 
@@ -135,11 +141,9 @@ void print_spaces(int nn) {
 }
 
 int nn(char *line) {
-    char char1[2], char2[1];
-    strcpy(char1, line[4]);
-    strcpy(char2, line[5]);
-    strcat(char1, char2);
+    char nums[3];
+    nums[0] = line[3], nums[1] = line[4];
     int converted;
-    converted = atoi(char1);
+    converted = atoi(nums);
     return converted;
 }
