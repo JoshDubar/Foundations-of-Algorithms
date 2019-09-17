@@ -78,10 +78,12 @@ int main(int argc, char *argv[]) {
             } else if ((line[1] == BREAK || line[1] == PARAGRAPH) && previous) {
                 continue;
             }
-            print_spaces(margin);
             previous = 1; 
             count = 0;
         } else if (line[0] != FULLSTOP) {
+            if (previous) {
+                print_spaces(margin);
+            }
             remove_spaces(line, margin, width);  
             previous = 0;   
         }
