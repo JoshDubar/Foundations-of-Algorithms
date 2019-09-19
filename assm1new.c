@@ -42,21 +42,25 @@
 
 /* *************************************************** */
 /*                     Constants                       */
-#define DEFAULT_OFFSET 4
-#define MAXDELIM 5
-#define MAXLINE 50
-#define MAX 999
-#define FULLSTOP '.'
-#define BREAK 'b'
-#define PARAGRAPH 'p'
-#define LEFT 'l'
-#define WIDTH 'w'
+#define DEFAULT_OFFSET 4 /* default margin size */
+#define MAXDELIM 5 /* size of delimiters in strtok */
+#define MAXLINE 50 /* default output line max length */
+#define MAX 999 /* largest input line length*/
+#define FULLSTOP '.' /* fullstop character */
+#define BREAK 'b' /* break symbol character */
+#define PARAGRAPH 'p' /* paragraph symbol character */
+#define LEFT 'l' /* margin size symbol character */
+#define WIDTH 'w' /* width size symbol character */
+#define NEWLINE '\n' /* new line character */
+#define DELIMITERS " \r\n\t" /* delimiters for token */
+#define NEWPARA "\n\n" /* creates new paragraph */
+#define SPACE ' ' /* space character */
+/* *************************************************** */
 
 /* *************************************************** */
-int count = 0;
-/* *************************************************** */
 /*                  function prototypes                */
-void remove_spaces(char *line, int offset, int width);
+void process_line(int *count, int *previous, int *margin, int *width, char *line);
+void remove_spaces(char *line, int *offset, int *width, int *count);  
 int check_commands(char *line);
 void print_spaces(int nn);
 void process_break();
@@ -65,54 +69,70 @@ void print_spaces(int nn);
 int nn(char *line);
 /* *************************************************** */
 
-int main(int argc, char *argv[]) {
+/* main program controls all the action */
+
+int 
+main(int argc, char *argv[]) {
     char line[MAX];
-    int previous=0, margin=DEFAULT_OFFSET, width=MAXLINE;
+    int count = 0, previous=0, margin=DEFAULT_OFFSET, width=MAXLINE;
     print_spaces(DEFAULT_OFFSET);
+    /* read in each line and send them off for processing*/
     while (fgets(line, sizeof line, stdin)) {
-        if (line[0] == FULLSTOP && !previous) {            
-            if (line[1] == LEFT) {
-                margin = check_commands(line);
-                printf("\n%d\n", margin);
-            } else if (line[1] == WIDTH) {
-                width = check_commands(line);
-            } else if (line[1] == BREAK || line[1] == PARAGRAPH) {
-                check_commands(line);
-            }
-            print_spaces(margin);
-            previous = 1; 
-            count = 0;
-        } else if (line[0] != FULLSTOP) {
-            remove_spaces(line, margin, width);  
-            previous = 0;   
-        }
+        process_line(&count, &previous, &margin, &width, line);
     }
     return 0;
 }
 
-void remove_spaces(char *line, int offset, int width) {
+/* perform different actions depending on the command, if there is no command we process the text in the line*/
+
+void process_line(int *count, int *previous, int *margin, int *width, char *line) {
+    /* test for each command */
+    if (line[0] == FULLSTOP && !*previous) {            
+        if (line[1] == LEFT) {
+            *margin = check_commands(line);
+        } else if (line[1] == WIDTH) {
+            *width = check_commands(line);
+        } else if (line[1] == BREAK || line[1] == PARAGRAPH) {
+            check_commands(line);
+        }
+        print_spaces(*margin);
+        *previous = 1; 
+        *count = 0;
+        
+    } else if (line[0] != FULLSTOP) {
+        remove_spaces(line, margin, width, count);  
+         *previous = 0;   
+        }
+}
+
+/* function to remove spaces and output text  */
+void remove_spaces(char *line, int *offset, int *width, int *count) {
     char *token;
-    const char s[MAXDELIM] = " \r\n\t";
+    /* choose how to seperate tokens */
+    const char s[MAXDELIM] = DELIMITERS;
     token = strtok(line, s);
+    /* line by line, remove delimiters and display text to the maximum width of the line */
     while (token != NULL) {
-        count += strlen(token) + 1;
-        if (count-1 > width) {
-            printf("\n");
-            print_spaces(offset);
-            count = strlen(token)+1;
+        *count += strlen(token) + 1;
+        if (*count-1 > *width) {
+            printf("%c", NEWLINE);
+            print_spaces(*offset);
+            *count = strlen(token)+1;
         } 
         printf("%s ", token);
         token = strtok(NULL, s); 
     }
 }
-
+/* check the commands used and performs them */
 int check_commands(char *line) {
+
     if (line[1] == BREAK) {
         process_break();
         return 0;
     } else if (line[1] == PARAGRAPH) {
         process_paragraph();
         return 0;
+    /* if .l or .w we want to change the margin size/width, so we return a number */
     } else if (line[1] == LEFT) {
         process_paragraph();
         int i =  nn(line);
@@ -125,24 +145,30 @@ int check_commands(char *line) {
     return 0;
 }
 
+/* process break command */
 void process_break() {
-    printf("\n");
+    printf("%c", NEWLINE);
 }
 
+/* process new paragraph command */
 void process_paragraph() {
-    printf("\n\n");
+    printf("%s", NEWPARA);
 }
 
+/* print margin */
 void print_spaces(int nn) {
     int i;
     for (i=0;i<nn;i++) {
-        printf(" ");
+        printf("%c", SPACE);
     }
 }
 
-int nn(char *line) {
-    char nums[3];
-    nums[0] = line[3], nums[1] = line[4];
+/* return the new size of the margin size/width of text */
+
+int nn(char *line) { 
+    char nums[4];
+    /* change nn characters to an integer */
+    nums[0] = line[3], nums[1] = line[4], nums[2] = line[5];
     int converted;
     converted = atoi(nums);
     return converted;
