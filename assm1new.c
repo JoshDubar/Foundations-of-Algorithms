@@ -72,9 +72,7 @@ main(int argc, char *argv[]) {
     print_spaces(DEFAULT_OFFSET);
     /* read in each line and send them off for processing*/
     while (fgets(line, sizeof line, stdin)) {
-<<<<<<< HEAD
         process_line(&count, &previous, &margin, &width, line);
-=======
         if (line[0] == FULLSTOP) {            
             if (line[1] == LEFT && previous) {
                 margin = nn(line);
@@ -98,7 +96,6 @@ main(int argc, char *argv[]) {
             remove_spaces(line, margin, width);  
             previous = 0;   
         }
->>>>>>> 1260e855cc3c336bd40facc957f8a3e974699884
     }
     return 0;
 }
