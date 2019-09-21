@@ -46,6 +46,7 @@
 #define MAXDELIM 5 /* size of delimiters in strtok */
 #define MAXLINE 50 /* default output line max length */
 #define MAX 999 /* largest input line length*/
+#define MAX_NN 4/* nn array size */
 #define FULLSTOP '.' /* fullstop character */
 #define BREAK 'b' /* break symbol character */
 #define PARAGRAPH 'p' /* paragraph symbol character */
@@ -75,7 +76,6 @@ int
 main(int argc, char *argv[]) {
     char line[MAX];
     int count = 0, previous=0, margin=DEFAULT_OFFSET, width=MAXLINE;
-    print_spaces(DEFAULT_OFFSET);
     /* read in each line and send them off for processing*/
     while (fgets(line, sizeof line, stdin)) {
         process_line(&count, &previous, &margin, &width, line);
@@ -86,30 +86,36 @@ main(int argc, char *argv[]) {
 /* perform different actions depending on the command, if there is no command we process the text in the line*/
 
 void process_line(int *count, int *previous, int *margin, int *width, char *line) {
-    /* test for each command */
-    if (line[0] == FULLSTOP) {            
+    /* test for each command, if the previous line was a command, skip line breaks*/
+    if (line[0] == FULLSTOP) {  
+        /* change margin size */          
         if (line[1] == LEFT && !*previous) {
             *margin = check_commands(line);
         } else if (line[1] == LEFT) {
             *margin = nn(line);
-            print_spaces(*margin);
             return;
+        /* change max width of text */
         } else if (line[1] == WIDTH && !*previous) {
             *width = check_commands(line);
         } else if (line[1] == WIDTH) {
             *width = nn(line);
-            print_spaces(*margin);
             return;
+        /* add line break or paragraph */
         } else if ((line[1] == BREAK || line[1] == PARAGRAPH) && !*previous) {
             check_commands(line);
         } else if ((line[1] == BREAK || line[1] == PARAGRAPH)) {
             return;
+        /* ignore any other commands */
+        } else {
+            return;
         }
-        print_spaces(*margin);
         *previous = 1; 
         *count = 0;
-        
+    /* if line does not have a command, process the text */
     } else if (line[0] != FULLSTOP) {
+        if (*previous) {
+            print_spaces(*margin);
+        }
         remove_spaces(line, margin, width, count);  
         *previous = 0;   
     }
@@ -176,7 +182,7 @@ void print_spaces(int nn) {
 /* return the new size of the margin size/width of text */
 
 int nn(char *line) { 
-    char nums[4];
+    char nums[MAX_NN];
     /* change nn characters to an integer */
     nums[0] = line[3], nums[1] = line[4], nums[2] = line[5];
     int converted;
