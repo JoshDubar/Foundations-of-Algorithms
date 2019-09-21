@@ -87,13 +87,23 @@ main(int argc, char *argv[]) {
 
 void process_line(int *count, int *previous, int *margin, int *width, char *line) {
     /* test for each command */
-    if (line[0] == FULLSTOP && !*previous) {            
-        if (line[1] == LEFT) {
+    if (line[0] == FULLSTOP) {            
+        if (line[1] == LEFT && !*previous) {
             *margin = check_commands(line);
-        } else if (line[1] == WIDTH) {
+        } else if (line[1] == LEFT) {
+            *margin = nn(line);
+            print_spaces(*margin);
+            return;
+        } else if (line[1] == WIDTH && !*previous) {
             *width = check_commands(line);
-        } else if (line[1] == BREAK || line[1] == PARAGRAPH) {
+        } else if (line[1] == WIDTH) {
+            *width = nn(line);
+            print_spaces(*margin);
+            return;
+        } else if ((line[1] == BREAK || line[1] == PARAGRAPH) && !*previous) {
             check_commands(line);
+        } else if ((line[1] == BREAK || line[1] == PARAGRAPH)) {
+            return;
         }
         print_spaces(*margin);
         *previous = 1; 
@@ -101,8 +111,8 @@ void process_line(int *count, int *previous, int *margin, int *width, char *line
         
     } else if (line[0] != FULLSTOP) {
         remove_spaces(line, margin, width, count);  
-         *previous = 0;   
-        }
+        *previous = 0;   
+    }
 }
 
 /* function to remove spaces and output text  */
