@@ -1,3 +1,4 @@
 # Foundations-of-Algorithms
 
-Assignments for FoA sem 2 2019
+Assignment 1 for FoA sem 2 2019
+text to LaTeX basic parser
